@@ -231,11 +231,8 @@ FUNCTION fi-last-edi-date RETURNS DATE (cod-emitente AS INTEGER ):
 END.
 
 FUNCTION fi-cliente-EDI-semana RETURN LOGICAL (cod-emitente AS INTEGER):
-    RETURN cod-emitente = 10000124 OR 
-           cod-emitente = 10005725 /*OR 
-           cod-emitente = 10005705 OR
-           cod-emitente = 10006441 OR
-           cod-emitente = 10006052*/ .
+    RETURN cod-emitente = 10000000 OR  /* colocar os clientes .. enquanto não fazer de uma forma melhor */
+           cod-emitente = 10000001  .
 END FUNCTION.
 
 PROCEDURE edi-por-cliente:
