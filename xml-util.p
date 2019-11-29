@@ -1,3 +1,5 @@
+FUNCTION dec2TXT RETURNS CHAR (DECIMAL) FORWARD .
+
 FUNCTION cria-noderef RETURNS HANDLE (documento AS HANDLE,
                                       descricao AS CHAR,
                                       tipo      AS CHAR):
@@ -21,7 +23,7 @@ FUNCTION novo-elemento-texto RETURNS HANDLE (documento AS HANDLE,
                                              valor     AS CHAR ).
     DEF VAR elemento AS HANDLE NO-UNDO.
     ASSIGN elemento = cria-noderef(documento, "", "TEXT").
-    elemento:NODE-VALUE = valor.
+    elemento:NODE-VALUE = valor.    
     elemento-pai:APPEND-CHILD(elemento).
     DELETE OBJECT elemento-pai NO-ERROR.
     RETURN elemento.
@@ -46,6 +48,33 @@ PROCEDURE adiciona-valor-elemento:
                                                     descricao),
                                       valor).
 END PROCEDURE.
+/*
+PROCEDURE adiciona-valor-elemento-decimal:
+    DEF INPUT PARAM documento    AS HANDLE  NO-UNDO.
+    DEF INPUT PARAM elemento-pai AS HANDLE  NO-UNDO.
+    DEF INPUT PARAM descricao    AS CHAR    NO-UNDO.
+    DEF INPUT PARAM valor        AS DECIMAL NO-UNDO.
+
+    DELETE OBJECT novo-elemento-texto(documento,
+                                      novo-elemento(documento, 
+                                                    elemento-pai, 
+                                                    descricao),
+                                      TRIM(STRING(valor, '>>>>>>>>>9.99'))).
+END PROCEDURE.
+
+PROCEDURE adiciona-valor-elemento-data:
+    DEF INPUT PARAM documento    AS HANDLE NO-UNDO.
+    DEF INPUT PARAM elemento-pai AS HANDLE NO-UNDO.
+    DEF INPUT PARAM descricao    AS CHAR   NO-UNDO.
+    DEF INPUT PARAM valor        AS DATE   NO-UNDO.
+
+    DELETE OBJECT novo-elemento-texto(documento,
+                                      novo-elemento(documento, 
+                                                    elemento-pai, 
+                                                    descricao),
+                                      STRING(valor, '99/99/9999')).
+END PROCEDURE.
+*/
 
 FUNCTION dec2TXT RETURNS CHAR (valor AS DECIMAL):
     RETURN REPLACE(STRING(valor), ",", ".").
@@ -73,9 +102,16 @@ RUN adiciona-valor-elemento(doc, op, 'usuario', c-seg-usuario).
 
 DELETE OBJECT op NO-ERROR.
 
+
 doc:SAVE("file", "c:\temp\" + gera-nome-arquivo(nr-ord-prod)).
-/*doc:SAVE("longchar", doc-xml).*/
+
+ou
+
+doc:SAVE("longchar", doc-xml).
+doc-xml = replace('<RpsNumero/>', '<RpsNumero></RpsNumero>').
+doc-xml = replace('<RpsSerie/>', '<RpsSerie></RpsSerie>').
+COPY-LOB FROM lcXML TO FILE "c:\temp\" + gera-nome-arquivo(nr-ord-prod)).
 
 DELETE OBJECT doc NO-ERROR.
-*/
 
+*/
