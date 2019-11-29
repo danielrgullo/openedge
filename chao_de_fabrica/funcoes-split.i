@@ -12,8 +12,9 @@ DEF TEMP-TABLE RowError
 
 FUNCTION cod-ctrab-default RETURNS CHAR (nr-ord-prod AS INTEGER,
                                          op-codigo   AS INTEGER):    
-    FIND FIRST b-split-operac NO-LOCK WHERE b-split-operac.nr-ord-prod = nr-ord-prod
-                                        AND b-split-operac.op-codigo   = op-codigo NO-ERROR.
+    FIND FIRST b-split-operac NO-LOCK 
+        WHERE b-split-operac.nr-ord-prod = nr-ord-prod
+          AND b-split-operac.op-codigo   = op-codigo NO-ERROR.
     IF AVAIL b-split-operac AND conta-ctrab-gm(b-split-operac.cod-ctrab) = 1 THEN
         RETURN b-split-operac.cod-ctrab.
     RETURN "".
@@ -26,15 +27,18 @@ PROCEDURE divide-split:
     DEF VAR h-bo AS HANDLE NO-UNDO.
     DEF VAR retorno AS CHAR NO-UNDO.
     
-    FIND FIRST split-operac WHERE ROWID(split-operac) = r-split NO-LOCK NO-ERROR.
-    IF NOT AVAIL split-operac THEN
+    FIND FIRST split-operac NO-LOCK 
+        WHERE ROWID(split-operac) = r-split NO-ERROR.
+    IF NOT AVAIL split-operac THEN DO:
+        RELEASE split-operac.
         RETURN "NOK".
+    END.
 
     FIND FIRST ITEM OF split-operac NO-LOCK NO-ERROR.
     IF NOT AVAIL ITEM THEN
         RETURN "NOK".
 
-    IF ITEM.fraciona = FALSE THEN   /* n√£o sei se precisa for√ßar isso ... */
+    IF ITEM.fraciona = FALSE THEN   /* n∆o sei se precisa foráar isso ... */
         ASSIGN qt-apontado = INT(qt-apontado).
 
     RUN ccs/cf/bo-split-join-oper.p PERSISTENT SET h-bo.
@@ -42,6 +46,7 @@ PROCEDURE divide-split:
     ASSIGN retorno = STRING(RETURN-VALUE).
     RUN destroy-bo IN h-bo.
     ASSIGN h-bo = ?.
+    RELEASE split-operac.
     RETURN retorno.
 END PROCEDURE.
 
@@ -61,10 +66,11 @@ PROCEDURE unir-split:
                                          op-codigo).
     
     ASSIGN c = 0.
-    FOR EACH split-operac NO-LOCK WHERE split-operac.nr-ord-prod = nr-ord-prod
-                                    AND split-operac.op-codigo = op-codigo
-                                    AND split-operac.cod-ctrab = cod-ctrab
-                                    AND split-operac.ind-estado-split < 5:
+    FOR EACH split-operac NO-LOCK 
+            WHERE split-operac.nr-ord-prod = nr-ord-prod
+              AND split-operac.op-codigo = op-codigo
+              AND split-operac.cod-ctrab = cod-ctrab
+              AND split-operac.ind-estado-split < 5:
         ASSIGN c = c + 1.
         IF r-split1 = ? THEN
             ASSIGN r-split1 = ROWID(split-operac).
@@ -131,7 +137,7 @@ FUNCTION tem-split-vazio RETURN LOGICAL (INPUT nr-ord-prod AS INTEGER,
 
     ASSIGN ret = tem-split-aberto-ctrab(nr-ord-prod,
                                         op-codigo,
-                                        cod-ctrab-default(nr-ord-prod, /* quando o gm s√≥ tem um ctrab, n√£o √© vazio! */
+                                        cod-ctrab-default(nr-ord-prod, /* quando o gm s¢ tem um ctrab, n∆o Ç vazio! */
                                                           op-codigo),  
                                         r-split,
                                         qt-saldo).
@@ -208,7 +214,8 @@ FUNCTION aprovado-operacao-anterior RETURNS DECIMAL (nr-ord-prod AS INTEGER,
     IF op-predec > 0 THEN
         RETURN total-aprovado-operacao(nr-ord-prod, op-predec).
     
-    FIND FIRST ord-prod NO-LOCK WHERE ord-prod.nr-ord-prod = nr-ord-prod NO-ERROR.
+    FIND FIRST ord-prod NO-LOCK 
+        WHERE ord-prod.nr-ord-prod = nr-ord-prod NO-ERROR.
     IF AVAIL ord-prod THEN
         RETURN ord-prod.qt-ordem.
     RETURN 0.0.
@@ -320,11 +327,13 @@ FUNCTION pode-apontar-horario RETURNS LOGICAL (cod-ctrab AS CHAR,
 
     DEF BUFFER b-grup-maquin FOR grup-maquin.
     DEF BUFFER b-area-produc-ctrab FOR area-produc-ctrab.
+    
 
     IF hr-fim < hr-ini THEN
         RETURN NO.
 
-    FIND FIRST b-area-produc-ctrab WHERE b-area-produc-ctrab.cod-ctrab = cod-ctrab NO-LOCK NO-ERROR.
+    FIND FIRST b-area-produc-ctrab NO-LOCK 
+        WHERE b-area-produc-ctrab.cod-ctrab = cod-ctrab NO-ERROR.
     IF NOT AVAIL b-area-produc-ctrab THEN
         RETURN NO.
     
@@ -335,17 +344,19 @@ FUNCTION pode-apontar-horario RETURNS LOGICAL (cod-ctrab AS CHAR,
     IF b-grup-maquin.ind-tip-ctrab <> 1 THEN
         RETURN YES.
 
-    FIND FIRST b-split-operac WHERE b-split-operac.cod-ctrab = cod-ctrab
-                                AND b-split-operac.dat-fim-operac = data
-                                AND (b-split-operac.qtd-segs-inic-operac  <= hr-fim OR
-                                     b-split-operac.qtd-segs-fim-operac   <= hr-fim)
-                                AND b-split-operac.qtd-segs-fim-operac >= hr-ini NO-LOCK NO-ERROR.
+    FIND FIRST b-split-operac NO-LOCK
+        WHERE b-split-operac.cod-ctrab = cod-ctrab
+          AND b-split-operac.dat-fim-operac = data
+          AND (b-split-operac.qtd-segs-inic-operac  <= hr-fim OR
+               b-split-operac.qtd-segs-fim-operac   <= hr-fim)
+          AND b-split-operac.qtd-segs-fim-operac >= hr-ini NO-ERROR.
     RETURN NOT AVAIL(b-split-operac).
 END FUNCTION.
 
 FUNCTION apontamento-gm-alternativo RETURNS LOGICAL (r-split-operac AS ROWID,
                                                      c-novo-gm      AS CHAR ):
-    FIND FIRST b-split-operac NO-LOCK WHERE ROWID(b-split-operac) = r-split-operac NO-ERROR.
+    FIND FIRST b-split-operac NO-LOCK 
+        WHERE ROWID(b-split-operac) = r-split-operac NO-ERROR.
     IF NOT AVAIL b-split-operac THEN 
         RETURN FALSE.
 
@@ -361,9 +372,10 @@ PROCEDURE aloca-gm-codigo-split :
     
     DEF VAR h-boin535 AS HANDLE NO-UNDO.
     
-    FIND FIRST b-split-operac NO-LOCK WHERE ROWID(b-split-operac) = r-split-operac NO-ERROR.
+    FIND FIRST b-split-operac NO-LOCK 
+        WHERE ROWID(b-split-operac) = r-split-operac NO-ERROR.
     IF NOT AVAIL b-split-operac THEN 
-        RETURN "Split n√£o encontrado!".
+        RETURN "Split n∆o encontrado!".
 
     ASSIGN gm-codigo-ant = b-split-operac.gm-codigo.
 
@@ -372,7 +384,7 @@ PROCEDURE aloca-gm-codigo-split :
 
     IF grup-maquina-do-ctrab(c-novo-ctrab) <> c-novo-gm AND
        NOT verifica-grup-maquina-alternativo(b-split-operac.gm-codigo, c-novo-gm) THEN
-        RETURN "Este n√£o √© um grupo de m√°quina alternativo v√°lido!".
+        RETURN "Este n∆o Ç um grupo de m†quina alternativo v†lido!".
 
     RUN inbo/boin535.r PERSISTENT SET h-boin535.
 
@@ -380,10 +392,11 @@ PROCEDURE aloca-gm-codigo-split :
          (INPUT r-split-operac,
           INPUT c-novo-gm,
           INPUT c-novo-ctrab,
-          INPUT "", /* nova-ferram */
+          INPUT "", // nova-ferram 
           OUTPUT TABLE RowError).
     
     DELETE PROCEDURE h-boin535 NO-ERROR.
+    ASSIGN h-boin535 = ?.
 
     FIND FIRST RowError NO-LOCK NO-ERROR.
     IF AVAIL RowError THEN
@@ -391,4 +404,3 @@ PROCEDURE aloca-gm-codigo-split :
 
     RETURN gm-codigo-ant.
 END PROCEDURE.
-

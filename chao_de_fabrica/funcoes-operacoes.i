@@ -89,6 +89,9 @@ END FUNCTION.
 
 FUNCTION verifica-grup-maquina-alternativo RETURNS LOGICAL (gm-codigo AS CHAR, 
                                                             gm-altern AS CHAR):
+    IF gm-codigo = gm-altern THEN /* porque est† comparando? */
+        RETURN TRUE.
+
     FIND FIRST grup-maq-altern NO-LOCK 
         WHERE grup-maq-altern.gm-codigo = gm-codigo
           AND grup-maq-altern.gm-altern = gm-altern NO-ERROR.
@@ -178,19 +181,21 @@ END FUNCTION.
 FUNCTION deposito-ctrab RETURNS CHAR (cod-ctrab AS CHAR):
 
     FIND FIRST area-produc-ctrab NO-LOCK 
-        WHERE area-produc-ctrab.cod-ctrab = cod-ctrab NO-ERROR.
+        WHERE area-produc-ctrab.cod-ctrab = cod-ctrab
+          AND area-produc-ctrab.dat-fim-valid > TODAY NO-ERROR.
     IF NOT AVAIL area-produc-ctrab THEN
         RETURN "".
+    
     
     FIND FIRST area-produc OF area-produc-ctrab NO-LOCK NO-ERROR.
     IF NOT AVAIL area-produc THEN
         RETURN "".
-    
+
     FIND FIRST ccs-area-produc NO-LOCK 
         WHERE ccs-area-produc.cod-area-produc = area-produc.cod-area-produc NO-ERROR.
-    IF AVAIL ccs-area-produc THEN
+    IF AVAIL ccs-area-produc THEN DO:
         RETURN ccs-area-produc.cod-depos.
-    ELSE DO:
+    END. ELSE DO:
         FOR EACH estrut-area-produc NO-LOCK 
                 WHERE estrut-area-produc.cod-area-filho = area-produc-ctrab.cod-area-produc:
             FIND FIRST ccs-area-produc NO-LOCK 
@@ -247,19 +252,19 @@ FUNCTION verifica-saldo-reservas RETURNS LOGICAL (nr-ord-prod AS INTEGER,
           AND b-oper-ord.op-codigo = op-codigo NO-ERROR.
     IF NOT AVAIL b-oper-ord THEN DO:
         RUN cria-erro("Saldo insuficiente para algumas reservas desta ordem.~Erro inesperado!").
-        RETURN FALSE. /* n√£o √© para vir para c√° */
+        RETURN FALSE. /* n∆o Ç para vir para c† */
     END.
-    /* E se o split teve o grupo de m√°quina alterado? veja IF mais abaixo */
+    /* E se o split teve o grupo de m†quina alterado? veja IF mais abaixo */
     ASSIGN cod-depos = deposito-gm-codigo(b-oper-ord.gm-codigo).
     IF cod-depos = "" OR get-grup-maquina-ctrab(cod-ctrab) <> b-oper-ord.gm-codigo THEN DO:
-        ASSIGN cod-depos = deposito-ctrab(cod-ctrab). /*pode isso ? - tem casos de um centro de trabalho para mais de uma area de produ√ß√£o. */
+        ASSIGN cod-depos = deposito-ctrab(cod-ctrab). /*pode isso ? - tem casos de um centro de trabalho para mais de uma area de produá∆o. */
     END.
 
-    RUN ccs/op/saldo-reservas.p (INPUT 2, /* por opera√ß√£o */
+    RUN ccs/op/saldo-reservas.p (INPUT 2, /* por operaá∆o */
                                  INPUT nr-ord-prod,
                                  INPUT op-codigo,
                                  INPUT qt-reportada,
-                                 INPUT NO, /* n√£o faz as requisi√ß√µes, s√≥ verifica */
+                                 INPUT NO, /* n∆o faz as requisiá‰es, s¢ verifica */
                                  INPUT cod-depos,
                                  OUTPUT TABLE tt-erro).
 
@@ -301,5 +306,3 @@ FUNCTION item-ordem-qtd-fracionada RETURNS LOGICAL (nr-ord-prod AS INTEGER):
 
     RETURN b-item.fraciona.
 END FUNCTION.
-
-

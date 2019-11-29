@@ -81,12 +81,12 @@ DEF TEMP-TABLE tt-import-rep-oper NO-UNDO
     FIELD qtd-refugada AS DECIMAL 
     FIELD qtd-refugada-un-ref AS DECIMAL 
     FIELD qtd-retrabalho AS DECIMAL 
-    &IF "{&emsfnd_version}" < "1.0" &THEN
+    /*&IF "{&emsfnd_version}" < "1.0" &THEN
         FIELD conta-refugo AS CHARACTER 
-    &ELSE
+    &ELSE*/
         FIELD ct-refugo AS CHARACTER
         FIELD sc-refugo AS CHARACTER
-    &ENDIF
+    /*&ENDIF*/
     FIELD dat-inic-rep AS DATE 
     FIELD hr-inic-rep AS DECIMAL
     FIELD dat-fim-rep AS DATE 
@@ -103,6 +103,7 @@ DEF TEMP-TABLE tt-import-rep-oper NO-UNDO
     FIELD finaliza AS LOGICAL 
     FIELD linha AS INTEGER 
     FIELD erro AS LOGICAL 
+    FIELD item-pai AS CHARACTER
     INDEX split tipo-rep it-codigo.
 
 DEF TEMP-TABLE tt-reservas-final LIKE tt-reservas.
@@ -132,4 +133,13 @@ DEF TEMP-TABLE tt-apont-mob NO-UNDO
 
 DEF BUFFER b-saldo-estoq FOR saldo-estoq.
 DEF BUFFER b-reservas FOR reservas.
+
+DEF TEMP-TABLE RowErrors NO-UNDO 
+    FIELD ErrorSequence AS INTEGER
+    FIELD ErrorNumber   AS INTEGER 
+    FIELD ErrorDescription AS CHAR FORMAT 'x(50)' /* <== */
+    FIELD ErrorParameters AS CHAR  FORMAT 'x(50)'
+    FIELD ErrorType AS CHAR  FORMAT 'x(50)'
+    FIELD ErrorHelp AS CHAR FORMAT 'x(100)'  /* <== */
+    FIELD ErrorSubType AS CHAR FORMAT 'x(50)'.
 

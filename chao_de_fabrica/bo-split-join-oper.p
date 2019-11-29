@@ -19,27 +19,39 @@ PROCEDURE divide-operacao:
     DEF INPUT PARAM qt-apontado AS DECIMAL NO-UNDO.
 
     DEF VAR qt-saldo AS DECIMAL NO-UNDO.
+    DEF VAR c-return-value AS CHAR NO-UNDO.
 
     RUN inicializa-bo.
 
-    FIND FIRST split-operac WHERE ROWID(split-operac) = r-rowid NO-ERROR. /* n√£o pode ter no-lock ! */
-    IF NOT AVAIL split-operac THEN
+    FIND FIRST split-operac 
+        WHERE ROWID(split-operac) = r-rowid NO-ERROR. /* n∆o pode ter no-lock ! */
+    IF NOT AVAIL split-operac THEN DO:
+        RUN destroy-bo.
         RETURN "NOK".
+    END.
 
     ASSIGN qt-saldo = split-operac.qtd-previs-operac - (split-operac.qtd-operac-aprov + 
                                                         split-operac.qtd-operac-refgda).
 
-    IF qt-saldo < qt-apontado THEN
+    IF qt-saldo < qt-apontado THEN DO:
+        RUN destroy-bo.
         RETURN "NOK".
-
-    IF qt-saldo - qt-apontado = 0 THEN
+    END.
+        
+    IF qt-saldo - qt-apontado = 0 THEN DO:
+        RUN destroy-bo.
         RETURN "NOK".
+    END.
+        
 
     RUN DividirSplitQtd IN h-boin535a (BUFFER split-operac,
     								   INPUT qt-apontado,
     								   INPUT qt-saldo - qt-apontado,
     								   OUTPUT TABLE tt-bo-erro).
-    RETURN RETURN-VALUE.
+    ASSIGN c-return-value = RETURN-VALUE.
+    RUN destroy-bo.
+
+    RETURN c-return-value.
 END.
 
 PROCEDURE get-tt-bo-erro:
@@ -59,8 +71,10 @@ PROCEDURE unir-operacoes:
 END PROCEDURE.
 
 PROCEDURE destroy-bo:
+    RELEASE split-operac.
     IF VALID-HANDLE(h-boin535a) THEN
-	    DELETE PROCEDURE h-boin535a.
+	    DELETE PROCEDURE h-boin535a NO-ERROR.
+    ASSIGN h-boin535a = ?.
 END PROCEDURE.
 
 /*
@@ -71,4 +85,3 @@ IF AVAILABLE tt-bo-erro THEN DO:
 					   INPUT RETURN-VALUE).
 	DELETE tt-bo-erro.
 END.*/
-
