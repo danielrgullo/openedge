@@ -30,11 +30,11 @@ DEFINE TEMP-TABLE tt-ped-ent NO-UNDO LIKE ped-ent
 DEFINE TEMP-TABLE RowErros NO-UNDO 
     FIELD errorSequence    AS INTEGER
     FIELD errorNumber      AS INTEGER
-    FIELD errorDescription AS CHARACTER 
-    FIELD errorParameters  AS CHARACTER
-    FIELD errorType        AS CHARACTER
-    FIELD errorHelp        AS CHARACTER
-    FIELD errorsubtype     AS CHARACTER.
+    FIELD errorDescription AS CHARACTER FORMAT 'x(60)'
+    FIELD errorParameters  AS CHARACTER FORMAT 'x(60)'
+    FIELD errorType        AS CHARACTER FORMAT 'x(60)'
+    FIELD errorHelp        AS CHARACTER FORMAT 'x(60)'
+    FIELD errorsubtype     AS CHARACTER FORMAT 'x(60)'.
 
 DEFINE TEMP-TABLE tt-log-apiped NO-UNDO
     FIELD nr-ped LIKE ped-venda.nr-pedcli
@@ -62,12 +62,14 @@ PROCEDURE adicionaPedido:
     IF VALID-HANDLE(hbodi159) THEN
         RUN openQueryStatic IN hbodi159 (INPUT "ChPedido":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o carregou bo !!! " VIEW-AS ALERT-BOX INFO BUTTONS OK.
+        MESSAGE "Erro Inesperado !!! N∆o carregou bo !!! " 
+            VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
     END.
     
-    FIND FIRST emitente WHERE emitente.nome-abrev = c-nome-abrev NO-LOCK NO-ERROR.
+    FIND FIRST emitente NO-LOCK 
+        WHERE emitente.nome-abrev = c-nome-abrev NO-ERROR.
 
     DO TRANSACTION:
     
@@ -84,23 +86,27 @@ PROCEDURE adicionaPedido:
                
         FIND FIRST tt-ped-venda NO-ERROR.        
         /*
-        == alterado para corrigir problema da CAT e natureza de opera√ß√£o ==
+        == alterado para corrigir problema da CAT e natureza de operaá∆o ==
         == 2012.05.31 ==
         IF emitente.nat-operacao <> "" THEN
             c-nat-operacao = emitente.nat-operacao.*/
+
         RUN pega-natureza-operacao( INPUT cod-estabel,
                                     INPUT c-ped, 
-                                    INPUT-OUTPUT c-nat-operacao ).
+                                    INPUT-OUTPUT c-nat-operacao ).                                    
 
         IF c-ped BEGINS "QYPP" OR c-ped BEGINS "QYPD" THEN
             ASSIGN i-esp-ped = 1.
+        IF c-ped BEGINS "#QYPP" OR c-ped BEGINS "#QYPD" THEN
+            ASSIGN i-esp-ped = 1.
+            
 
         FIND FIRST natur-oper NO-LOCK
             WHERE natur-oper.nat-oper = c-nat-operacao NO-ERROR.
 
         /* TODO: trocar cod-estabel se for para pedidos do PR */
 
-        ASSIGN  tt-ped-venda.nr-pedcli       = c-ped /*STRING(tt-ped-venda.nr-pedido)*/
+        ASSIGN  tt-ped-venda.nr-pedcli       = c-ped 
                 tt-ped-venda.cod-estabel     = cod-estabel
                 tt-ped-venda.nr-pedrep       = ""
                 tt-ped-venda.contato         = ""
@@ -108,18 +114,18 @@ PROCEDURE adicionaPedido:
                 tt-ped-venda.no-ab-reppri    = c-representante
                 tt-ped-venda.cod-mensagem    = natur-oper.cod-mensagem
                 tt-ped-venda.esp-ped         = i-esp-ped /* 1 = pedido simples,  2 = programacao entrega */
-                tt-ped-venda.origem          = 1 /* padr√£o: 1 */
+                tt-ped-venda.origem          = 1 /* padr∆o: 1 */
                 tt-ped-venda.cd-origem       = 2 /* 2 = EDI */
                 tt-ped-venda.tp-preco        = 3 /* 3 = dia do fat. */
-                tt-ped-venda.nr-tab-finan    = 1 /* padr√£o: 0, mas √© obrigat√≥rio */
-                tt-ped-venda.nr-ind-finan    = 1 /* padr√£o: 0, mas √© obrigat√≥rio */
-                tt-ped-venda.tab-ind-fin     = 1 /* padr√£o: mesmo que nr-tab-finan */ 
+                tt-ped-venda.nr-tab-finan    = 1 /* padr∆o: 0, mas Ç obrigat¢rio */
+                tt-ped-venda.nr-ind-finan    = 1 /* padr∆o: 0, mas Ç obrigat¢rio */
+                tt-ped-venda.tab-ind-fin     = 1 /* padr∆o: mesmo que nr-tab-finan */ 
                 tt-ped-venda.mo-codigo       = 0 /* 0 = moeda corrente */
-                tt-ped-venda.cod-sit-aval    = 1 /* padr√£o: 1 */
-                tt-ped-venda.cod-sit-pre     = 1 /* padr√£o: 1 */
-                tt-ped-venda.cod-sit-ped     = 1 /* padr√£o: 1 */
-                tt-ped-venda.cod-sit-com     = 1 /* padr√£o: 1 */
-                tt-ped-venda.proc-edi        = 1 /* padr√£o: ? */
+                tt-ped-venda.cod-sit-aval    = 1 /* padr∆o: 1 */
+                tt-ped-venda.cod-sit-pre     = 1 /* padr∆o: 1 */
+                tt-ped-venda.cod-sit-ped     = 1 /* padr∆o: 1 */
+                tt-ped-venda.cod-sit-com     = 1 /* padr∆o: 1 */
+                tt-ped-venda.proc-edi        = 1 /* padr∆o: ? */
                 /*tt-ped-venda.ind-aprov       = NO */
                 tt-ped-venda.ind-aprov       = YES
                 tt-ped-venda.tp-receita      = emitente.tp-rec-padrao
@@ -131,7 +137,7 @@ PROCEDURE adicionaPedido:
                 tt-ped-venda.cod-cond-pag    = emitente.cod-cond-pag
                 tt-ped-venda.cod-portador    = 341
                 tt-ped-venda.modalidade      = 6
-                tt-ped-venda.cod-entrega     = "Padr√£o"
+                tt-ped-venda.cod-entrega     = "Padr∆o"
                 tt-ped-venda.local-entreg    = emitente.endereco
                 tt-ped-venda.bairro          = emitente.bairro
                 tt-ped-venda.cidade          = emitente.cidade
@@ -140,19 +146,19 @@ PROCEDURE adicionaPedido:
                 tt-ped-venda.caixa-postal    = ""
                 tt-ped-venda.pais            = emitente.pais
                 tt-ped-venda.cgc             = emitente.cgc
-                tt-ped-venda.nome-transp     = "" /* (n√£o obrigat√≥rio) */
+                tt-ped-venda.nome-transp     = "" /* (n∆o obrigat¢rio) */
                 tt-ped-venda.dt-emissao      = TODAY
                 tt-ped-venda.dt-implant      = TODAY
                 /*tt-ped-venda.dt-entrega      = ?
                 tt-ped-venda.dt-minfat       = ?
                 tt-ped-venda.dt-lim-fat      = ?
                 tt-ped-venda.dt-entorig      = ?*/
-                tt-ped-venda.observacoes     = ""
+                tt-ped-venda.observacoes     = ''
                 .
         IF c-tabpre <> "" THEN
             ASSIGN tt-ped-venda.nr-tabpre = c-tabpre.
 
-        /* transportador da atualiza√ß√£o clientes do estabelecimento - PD0507 */
+        /* transportador da atualizaá∆o clientes do estabelecimento - PD0507 */
         FIND FIRST estab-cli NO-LOCK 
             WHERE estab-cli.cod-estabel = cod-estabel
               AND estab-cli.nome-abrev = c-nome-abrev NO-ERROR.
@@ -163,7 +169,10 @@ PROCEDURE adicionaPedido:
         RUN createRecord IN hbodi159.
         
         RUN getRowErrors IN hbodi159 (OUTPUT TABLE RowErros).
-        IF CAN-FIND(FIRST RowErros) THEN DO:
+
+        FIND FIRST RowErros NO-LOCK
+            WHERE RowErros.ErrorSubType <> 'WARNING' NO-ERROR.
+        IF AVAIL RowErros THEN DO:        
             OUTPUT STREAM st-erro TO c:\temp\erros_bodi159.txt APPEND.
             FOR EACH RowErros:
                 EXPORT STREAM st-erro DELIMITER ";" RowErros .
@@ -207,13 +216,18 @@ PROCEDURE adicionaPedidoItem:
     DEF INPUT PARAM c-obs        AS CHAR NO-UNDO.
     DEF OUTPUT PARAM TABLE FOR RowErros .
 
+    DEF VAR c-retorno AS CHAR NO-UNDO INIT 'OK'.
     DEF VAR c-nat-operacao AS CHAR NO-UNDO INIT "5101".
     
     DEF VAR i-seq AS INTEGER NO-UNDO.
 
-    FIND FIRST ITEM NO-LOCK WHERE ITEM.it-codigo = c-it NO-ERROR.
+    IF c-obs = ? THEN
+        ASSIGN c-obs = ''.
+
+    FIND FIRST ITEM NO-LOCK 
+        WHERE ITEM.it-codigo = c-it NO-ERROR.
     IF NOT AVAIL ITEM THEN DO:
-        MESSAGE "Erro Inesperado ! Item inv√°lido !!!":U
+        MESSAGE "Erro Inesperado ! Item inv†lido !!!":U
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RETURN "NOK".
     END.
@@ -231,16 +245,18 @@ PROCEDURE adicionaPedidoItem:
     IF VALID-HANDLE(hbodi154) THEN
        RUN openQueryStatic IN hbodi154 (INPUT "DEFAULT":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o Carregou BO !!!"
+        MESSAGE "Erro Inesperado !!! N∆o Carregou BO !!!"
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
     END.
 
-    FIND FIRST emitente WHERE emitente.nome-abrev = c-nome-abrev NO-LOCK NO-ERROR.
+    FIND FIRST emitente NO-LOCK 
+        WHERE emitente.nome-abrev = c-nome-abrev NO-ERROR.
 
     ASSIGN i-seq = 0.
-    FOR EACH ped-item NO-LOCK WHERE ped-item.nr-pedcli = c-ped :
+    FOR EACH ped-item NO-LOCK 
+            WHERE ped-item.nr-pedcli = c-ped:
         IF i-seq < ped-item.nr-sequencia THEN
             ASSIGN i-seq = ped-item.nr-sequencia.
     END.
@@ -267,7 +283,7 @@ PROCEDURE adicionaPedidoItem:
 
         FIND FIRST tt-ped-item NO-ERROR.
         
-        /* retorna erro se cabe√ßalho do pedido (ped-venda) n√£o existe. */
+        /* retorna erro se cabeáalho do pedido (ped-venda) n∆o existe. */
         EMPTY TEMP-TABLE tt-ped-venda.
         FIND ped-venda OF tt-ped-item NO-ERROR.
         IF NOT AVAIL ped-venda THEN DO:
@@ -276,18 +292,24 @@ PROCEDURE adicionaPedidoItem:
         END.
         BUFFER-COPY ped-venda TO tt-ped-venda.
         ASSIGN tt-ped-venda.r-rowid = ROWID(tt-ped-venda).
-
         
-                /*
-        == alterado para corrigir problema da CAT e natureza de opera√ß√£o ==
-        == 2012.05.31 == rev 2012.06.12 (n√£o usa mas deixa pronto se um dia voltar a usar).
+        /*
+        == alterado para corrigir problema da CAT e natureza de operaá∆o ==
+        == 2012.05.31 == rev 2012.06.12 (n∆o usa mas deixa pronto se um dia voltar a usar).
         IF emitente.nat-operacao <> "" THEN
-            ASSIGN c-nat-operacao = emitente.nat-operacao.*/
+            ASSIGN c-nat-operacao = emitente.nat-operacao.*/        
+        RUN pega-natureza-operacao-item 
+                    (INPUT cod-estabel,
+                     INPUT c-it,
+                     INPUT c-ped, 
+                     INPUT-OUTPUT c-nat-operacao ).
+        /* 2017-05 : tenta pegar por item agora , se n∆o achar faz conforme era antes
         RUN pega-natureza-operacao( INPUT cod-estabel,
                                     INPUT c-ped, 
-                                    INPUT-OUTPUT c-nat-operacao ).
+                                    INPUT-OUTPUT c-nat-operacao ).*/
 
         ASSIGN /*tt-ped-item.nat-operacao   = c-nat-operacao*/
+               tt-ped-item.nr-sequencia   = i-seq /* adicioan novamente? */
                tt-ped-item.nr-ordem       = 0
                tt-ped-item.dt-entorig     = dt-vencto
                tt-ped-item.dt-entrega     = dt-vencto
@@ -304,10 +326,10 @@ PROCEDURE adicionaPedidoItem:
                tt-ped-item.val-desconto-inform = 0
                tt-ped-item.esp-ped        = tt-ped-venda.esp-ped
                tt-ped-item.cd-origem      = 2 /* 2 = EDI */ 
-               tt-ped-item.tp-adm-lote    = 1 /* padr√£o: 1 */
-               tt-ped-item.tp-aloc-lote   = 1 /* padr√£o: 1 */
+               tt-ped-item.tp-adm-lote    = 1 /* padr∆o: 1 */
+               tt-ped-item.tp-aloc-lote   = 1 /* padr∆o: 1 */
                tt-ped-item.tipo-atend     = 2 /* 2 = parcial */
-               tt-ped-item.cod-sit-item   = 1 /* padr√£o: 1 */
+               tt-ped-item.cod-sit-item   = 1 /* padr∆o: 1 */
                tt-ped-item.cod-sit-pre    = tt-ped-venda.cod-sit-pre
                tt-ped-item.cod-sit-com    = tt-ped-venda.cod-sit-com
                tt-ped-item.cod-entrega    = tt-ped-venda.cod-entrega
@@ -324,9 +346,17 @@ PROCEDURE adicionaPedidoItem:
         RUN SetRecord IN hbodi154 (INPUT TABLE tt-ped-item).
         RUN CreateRecord IN hbodi154.
         RUN GetRowErrors IN hbodi154 (OUTPUT TABLE RowErros).
-        IF CAN-FIND(FIRST RowErros) THEN DO:
 
-            OUTPUT STREAM st-erro TO c:\temp\erros_bodi154.txt APPEND.
+        FIND FIRST RowErros NO-LOCK
+            WHERE RowErros.ErrorSubType <> 'WARNING' NO-ERROR.
+        IF AVAIL RowErros THEN DO:
+
+            ASSIGN c-retorno = 'NOK'.
+
+            OUTPUT STREAM st-erro TO c:\temp\erros_bodi154.txt APPEND NO-CONVERT.
+            PUT STREAM st-erro UNFORMATTED
+                STRING(TODAY, '99/99/9999') ' '
+                STRING(TIME, 'HH:MM:SS') ' ERROS: ' SKIP.
             FOR EACH RowErros:
                 EXPORT STREAM st-erro DELIMITER ";" RowErros .
             END.
@@ -337,6 +367,7 @@ PROCEDURE adicionaPedidoItem:
         END.
     END.
     RUN destroyAll.
+    RETURN c-retorno.
 END PROCEDURE. /* adicionaPedidoItem */
 
 PROCEDURE alteraPedidoItem:
@@ -352,7 +383,7 @@ PROCEDURE alteraPedidoItem:
 
     FIND FIRST ITEM NO-LOCK WHERE ITEM.it-codigo = c-it NO-ERROR.
     IF NOT AVAIL ITEM THEN DO:
-        MESSAGE "Erro Inesperado ! Item inv√°lido !!!"
+        MESSAGE "Erro Inesperado ! Item inv†lido !!!"
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RETURN "NOK".
     END.
@@ -364,7 +395,7 @@ PROCEDURE alteraPedidoItem:
     IF VALID-HANDLE(hbodi154) THEN
        RUN openQueryStatic IN hbodi154 (INPUT "DEFAULT":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o Carregou bo !!!"
+        MESSAGE "Erro Inesperado !!! N∆o Carregou bo !!!"
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
@@ -377,7 +408,7 @@ PROCEDURE alteraPedidoItem:
     IF VALID-HANDLE(hbodi159) THEN
         RUN openQueryStatic IN hbodi159 (INPUT "ChPedido":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o carregou bo !!! " VIEW-AS ALERT-BOX INFO BUTTONS OK.
+        MESSAGE "Erro Inesperado !!! N∆o carregou bo !!! " VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
     END.
@@ -410,7 +441,10 @@ PROCEDURE alteraPedidoItem:
         RUN SetRecord IN hbodi154 (INPUT TABLE tt-ped-item).
         RUN updateRecord IN hbodi154.
         RUN GetRowErrors IN hbodi154 (OUTPUT TABLE RowErros).
-        IF CAN-FIND(FIRST RowErros) THEN DO:
+
+        FIND FIRST RowErros NO-LOCK
+            WHERE RowErros.ErrorSubType <> 'WARNING' NO-ERROR.
+        IF AVAIL RowErros THEN DO:
 
             OUTPUT STREAM st-erro TO c:\temp\erros_bodi154.txt APPEND.
             FOR EACH RowErros:
@@ -440,16 +474,20 @@ PROCEDURE adicionaPedidoItemEntrega:
 
     DEF VAR c-hora AS CHAR INIT "000000".
 
+    IF c-obs = ? THEN
+        ASSIGN c-obs = ''.
+
     FIND FIRST ITEM NO-LOCK WHERE ITEM.it-codigo = c-it NO-ERROR.
     IF NOT AVAIL ITEM THEN DO:
-        MESSAGE "Erro Inesperado ! Item inv√°lido !!!"
+        MESSAGE "Erro Inesperado ! Item inv†lido !!!"
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RETURN "NOK".
     END.
 
     ASSIGN i-seqe = 0.
-    FOR EACH ped-ent NO-LOCK WHERE ped-ent.nr-pedcli    = c-ped 
-                               AND ped-ent.nr-sequencia = i-seq :
+    FOR EACH ped-ent NO-LOCK 
+            WHERE ped-ent.nr-pedcli    = c-ped 
+              AND ped-ent.nr-sequencia = i-seq :
         IF i-seqe < ped-ent.nr-entrega THEN
             ASSIGN i-seqe = ped-ent.nr-entrega.
     END.
@@ -462,7 +500,7 @@ PROCEDURE adicionaPedidoItemEntrega:
     IF VALID-HANDLE(hbodi149) THEN
         RUN openQueryStatic IN hbodi149 (INPUT "DEFAULT":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o carregou bo !!!" 
+        MESSAGE "Erro Inesperado !!! N∆o carregou bo !!!" 
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
@@ -485,7 +523,7 @@ PROCEDURE adicionaPedidoItemEntrega:
                 ASSIGN c-hora = ped-ent.hr-entrega.
         END.
         ASSIGN c-hora = STRING(  INT(c-hora) + 10, "999999" ).*/
-        ASSIGN c-hora = get-hr-entrega(c-ped, c-it, dt-vencto, "000000").
+        ASSIGN c-hora = get-hr-entrega(c-ped, c-it, dt-vencto, '').
 
         FIND FIRST tt-ped-ent NO-ERROR.
         ASSIGN tt-ped-ent.nr-pedcli    = c-ped
@@ -499,20 +537,29 @@ PROCEDURE adicionaPedidoItemEntrega:
                tt-ped-ent.tipo-atend   = 2 /* 1 = total, 2 = parcial */
                tt-ped-ent.cd-origem    = 2 /* 2 - EDI */
                tt-ped-ent.hr-entrega   = c-hora
-               tt-ped-ent.tp-entrega   = 1
+               tt-ped-ent.tp-entrega   = 1 /* 1 = firme */
                tt-ped-ent.dt-entrega   = dt-vencto
                tt-ped-ent.observacao   = c-obs
                .
-        FIND FIRST ped-item WHERE ped-item.nr-pedcli = c-ped 
-                              AND ped-item.nr-sequencia = i-seq NO-ERROR.
+        FIND FIRST ped-item NO-LOCK
+            WHERE ped-item.nr-pedcli = c-ped 
+              AND ped-item.nr-sequencia = i-seq NO-ERROR.
         ASSIGN tt-ped-ent.r-rowid = ROWID(ped-item).
         
         RUN SetRecord IN hbodi149 (INPUT TABLE tt-ped-ent).
         RUN CreateRecord IN hbodi149.
         RUN GetRowErrors IN hbodi149 (OUTPUT TABLE RowErros).
-        IF CAN-FIND(FIRST RowErros) THEN DO:
+
+         FIND FIRST RowErros NO-LOCK
+            WHERE RowErros.ErrorSubType <> 'WARNING' NO-ERROR.
+        IF AVAIL RowErros THEN DO:
 
             OUTPUT STREAM st-erro TO c:\temp\erros_bodi149.txt APPEND.
+            PUT UNFORMATTED 
+                c-ped ' '
+                i-seq ' '
+                c-it ' '
+                dt-vencto SKIP.
             FOR EACH RowErros:
                 EXPORT STREAM st-erro DELIMITER ";" RowErros .
             END.
@@ -539,7 +586,7 @@ PROCEDURE alteraPedidoItemEntrega:
 
     FIND FIRST ITEM NO-LOCK WHERE ITEM.it-codigo = c-it NO-ERROR.
     IF NOT AVAIL ITEM THEN DO:
-        MESSAGE "Erro Inesperado ! Item inv√°lido !!!"
+        MESSAGE "Erro Inesperado ! Item inv†lido !!!"
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RETURN "NOK".
     END.
@@ -551,7 +598,7 @@ PROCEDURE alteraPedidoItemEntrega:
     IF VALID-HANDLE(hbodi149) THEN
         RUN openQueryStatic IN hbodi149 (INPUT "DEFAULT":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o carregou bo !!!" VIEW-AS ALERT-BOX INFO BUTTONS OK.
+        MESSAGE "Erro Inesperado !!! N∆o carregou bo !!!" VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
     END.
@@ -563,7 +610,7 @@ PROCEDURE alteraPedidoItemEntrega:
     IF VALID-HANDLE(hbodi154) THEN
        RUN openQueryStatic IN hbodi154 (INPUT "DEFAULT":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o Carregou bo !!!"
+        MESSAGE "Erro Inesperado !!! N∆o Carregou bo !!!"
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
@@ -576,7 +623,7 @@ PROCEDURE alteraPedidoItemEntrega:
     IF VALID-HANDLE(hbodi159) THEN
         RUN openQueryStatic IN hbodi159 (INPUT "ChPedido":U).
     ELSE DO:
-        MESSAGE "Erro Inesperado !!! N√£o carregou bo !!! " VIEW-AS ALERT-BOX INFO BUTTONS OK.
+        MESSAGE "Erro Inesperado !!! N∆o carregou bo !!! " VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RUN destroyAll.
         RETURN "NOK".
     END.
@@ -607,7 +654,10 @@ PROCEDURE alteraPedidoItemEntrega:
                tt-ped-ent.qt-un-fat    = d-qtd               
                .
         IF tt-ped-ent.dt-entrega <> dt-vencto THEN DO:
-            ASSIGN c-hora = get-hr-entrega(c-ped, c-it, dt-vencto, tt-ped-ent.hr-entrega).
+            ASSIGN c-hora = get-hr-entrega(c-ped, 
+                                           c-it, 
+                                           dt-vencto, 
+                                           tt-ped-ent.hr-entrega).
             ASSIGN tt-ped-ent.dt-entrega = dt-vencto
                    tt-ped-ent.hr-entrega = c-hora.
         END.
@@ -615,7 +665,10 @@ PROCEDURE alteraPedidoItemEntrega:
         RUN SetRecord IN hbodi149 (INPUT TABLE tt-ped-ent).
         RUN updateRecord IN hbodi149.
         RUN GetRowErrors IN hbodi149 (OUTPUT TABLE RowErros).
-        IF CAN-FIND(FIRST RowErros) THEN DO:
+
+        FIND FIRST RowErros NO-LOCK
+            WHERE RowErros.ErrorSubType <> 'WARNING' NO-ERROR.
+        IF AVAIL RowErros THEN DO:
 
             OUTPUT STREAM st-erro TO c:\temp\erros_bodi149.txt APPEND.
             PUT UNFORMATTED 'Alterando ...' SKIP.
@@ -645,7 +698,7 @@ PROCEDURE cancelaPedidoItemEntrega:
 
     FIND FIRST ITEM NO-LOCK WHERE ITEM.it-codigo = c-it NO-ERROR.
     IF NOT AVAIL ITEM THEN DO:
-        MESSAGE "Erro Inesperado ! Item inv√°lido !!!"
+        MESSAGE "Erro Inesperado ! Item inv†lido !!!"
             VIEW-AS ALERT-BOX INFO BUTTONS OK.
         RETURN "NOK".
     END.
@@ -653,32 +706,37 @@ PROCEDURE cancelaPedidoItemEntrega:
     IF NOT VALID-HANDLE(hbodi149can) THEN
         RUN dibo/bodi149can.p PERSISTENT SET hbodi149can.
 
-    FIND FIRST emitente WHERE emitente.nome-abrev = c-nome-abrev NO-LOCK NO-ERROR.
+    FIND FIRST emitente NO-LOCK 
+        WHERE emitente.nome-abrev = c-nome-abrev NO-ERROR.
 
     DO TRANSACTION:
         
-        FOR FIRST ped-ent WHERE ped-ent.nr-pedcli   = c-ped 
-                           AND ped-ent.it-codigo    = c-it 
-                           AND ped-ent.nr-sequencia = i-sequencia
-                           AND ped-ent.nr-entrega   = i-entrega: END.
+        FOR FIRST ped-ent 
+            WHERE ped-ent.nr-pedcli   = c-ped 
+              AND ped-ent.it-codigo    = c-it 
+              AND ped-ent.nr-sequencia = i-sequencia
+              AND ped-ent.nr-entrega   = i-entrega: END.
 
         FIND FIRST ped-item OF ped-ent NO-ERROR.
         FIND FIRST ped-venda OF ped-item NO-ERROR.
 
         IF AVAIL ped-ent THEN
-            RUN updateCancelation   IN hbodi149can( INPUT ROWID(ped-ent), 
-                                                    INPUT "Cancelamento via EDI", 
-                                                    INPUT dt-cancela, 
-                                                    INPUT i-motivo ).
+            RUN updateCancelation IN hbodi149can( INPUT ROWID(ped-ent), 
+                                                  INPUT "Cancelamento via EDI", 
+                                                  INPUT dt-cancela, 
+                                                  INPUT i-motivo ).
         ELSE DO:
-            MESSAGE "Erro Inesperado ! Pedido n√£o encontrado !!!"
+            MESSAGE "Erro Inesperado ! Pedido n∆o encontrado !!!"
                 VIEW-AS ALERT-BOX INFO BUTTONS OK.
             RUN destroyAll.
             RETURN "NOK".
         END.
 
         RUN GetRowErrors IN hbodi149can (OUTPUT TABLE RowErros).
-        IF CAN-FIND(FIRST RowErros) THEN DO:
+
+        FIND FIRST RowErros NO-LOCK
+            WHERE RowErros.ErrorSubType <> 'WARNING' NO-ERROR.
+        IF AVAIL RowErros THEN DO:
 
             OUTPUT STREAM st-erro TO c:\temp\erros_bodi149.txt APPEND.
             PUT UNFORMATTED 'Cancelando ...' SKIP.
@@ -693,7 +751,97 @@ PROCEDURE cancelaPedidoItemEntrega:
     END.
     RUN destroyAll.
 END PROCEDURE. /* cancelaPedidoItemEntrega */
+
+
+PROCEDURE deletaPedidoItemEntrega:
+    DEF INPUT  PARAM c-nome-abrev AS CHAR NO-UNDO.
+    DEF INPUT  PARAM c-ped        AS CHAR NO-UNDO.
+    DEF INPUT  PARAM i-sequencia  AS  INT NO-UNDO.
+    DEF INPUT  PARAM i-entrega    AS  INT NO-UNDO.
+    DEF INPUT  PARAM c-it         AS CHAR NO-UNDO.
+    DEF OUTPUT PARAM TABLE FOR RowErros.
+
+    /* Crio Instancia da DBO */
+    IF NOT VALID-HANDLE(hbodi149) THEN
+        RUN dibo/bodi149.p    PERSISTENT SET hbodi149.
+
+    IF VALID-HANDLE(hbodi149) THEN
+        RUN openQueryStatic IN hbodi149 (INPUT "DEFAULT":U).
+    ELSE DO:
+        MESSAGE "Erro Inesperado !!! N∆o carregou bo !!!" VIEW-AS ALERT-BOX INFO BUTTONS OK.
+        RUN destroyAll.
+        RETURN "NOK".
+    END.
+
+    /* Crio Instancia da DBO */
+    IF NOT VALID-HANDLE(hbodi154) THEN
+        RUN dibo/bodi154.p    PERSISTENT SET hbodi154.
+
+    IF VALID-HANDLE(hbodi154) THEN
+       RUN openQueryStatic IN hbodi154 (INPUT "DEFAULT":U).
+    ELSE DO:
+        MESSAGE "Erro Inesperado !!! N∆o Carregou bo !!!"
+            VIEW-AS ALERT-BOX INFO BUTTONS OK.
+        RUN destroyAll.
+        RETURN "NOK".
+    END.
+
+    /* Crio Instancia da DBO */
+    IF NOT VALID-HANDLE(hbodi159) THEN
+        RUN dibo/bodi159.p    PERSISTENT SET hbodi159.
+    
+    IF VALID-HANDLE(hbodi159) THEN
+        RUN openQueryStatic IN hbodi159 (INPUT "ChPedido":U).
+    ELSE DO:
+        MESSAGE "Erro Inesperado !!! N∆o carregou bo !!! " VIEW-AS ALERT-BOX INFO BUTTONS OK.
+        RUN destroyAll.
+        RETURN "NOK".
+    END.
+
+    FIND FIRST emitente WHERE emitente.nome-abrev = c-nome-abrev NO-LOCK NO-ERROR.
+
+    DO TRANSACTION:
+
+        RUN goToKey   IN hbodi159 (INPUT c-nome-abrev, 
+                                   INPUT c-ped).
+        RUN goToKey   IN hbodi154 (INPUT c-nome-abrev, 
+                                   INPUT c-ped, 
+                                   INPUT i-sequencia, 
+                                   INPUT c-it, 
+                                   INPUT "").
+        /*RUN goToKey   IN hbodi149 (INPUT c-nome-abrev, 
+                                   INPUT c-ped, 
+                                   INPUT i-sequencia, 
+                                   INPUT c-it, 
+                                   INPUT "", 
+                                   INPUT i-entrega).
+
+        RUN deleteRecord IN hbodi149.
+        RUN GetRowErrors IN hbodi149 (OUTPUT TABLE RowErros).*/
+        RUN deleteRecord IN hbodi154.
+        RUN GetRowErrors IN hbodi154 (OUTPUT TABLE RowErros).
+
+        FIND FIRST RowErros NO-LOCK
+            WHERE RowErros.ErrorSubType <> 'WARNING' NO-ERROR.
+        IF AVAIL RowErros THEN DO:
+        
+            OUTPUT STREAM st-erro TO c:\temp\erros_bodi149.txt APPEND.
+            PUT UNFORMATTED 'deletando ...' SKIP.
+            FOR EACH RowErros:
+                EXPORT STREAM st-erro DELIMITER ";" RowErros .
+            END.
+            OUTPUT STREAM st-erro CLOSE.
+        
+            RUN destroyAll.
+            UNDO , LEAVE.
+        END.
+    END.
+
+    RUN destroyAll.
+
+END PROCEDURE. // deletaPedidoItemEntrega
 /*****************************************************************/
+
 /* Destroi Instancias  */
 PROCEDURE destroyAll:
     IF VALID-HANDLE(hbodi149) THEN DO:
@@ -734,9 +882,9 @@ PROCEDURE destroyAll:
     END.
 END PROCEDURE.
 /**
- *  Para a ..... √© definido uma natureza de opera√ß√£o diferente
+ *  Para a Caterpillar Ç definido uma natureza de operaá∆o diferente
  *  para cada tipo de pedido. 
- *  O tipo de pedido s√£o os 4 primeiros caracteres "numero" do pedido.
+ *  O tipo de pedido s∆o os 4 primeiros caracteres "numero" do pedido.
  ************************************************************************/
 PROCEDURE pega-natureza-operacao :
     DEF INPUT        PARAM cod-estabel AS CHAR NO-UNDO.
@@ -745,7 +893,7 @@ PROCEDURE pega-natureza-operacao :
 
     ASSIGN nr-pedcli = REPLACE(nr-pedcli, "#", "").
 
-    IF emitente.nat-oper <> "" THEN /* para os outros clientes usa o padr√£o */
+    IF emitente.nat-oper <> "" THEN /* para os outros clientes usa o padr∆o */
         ASSIGN nat-oper = emitente.nat-oper.
 
     IF emitente.cod-emitente = 10000124 THEN DO:
@@ -757,8 +905,10 @@ PROCEDURE pega-natureza-operacao :
             ASSIGN nat-oper  = "5124".
         IF nr-pedcli BEGINS "QYPP" OR nr-pedcli BEGINS "QYPD" THEN
             ASSIGN nat-oper  = "5102".
+        IF nr-pedcli BEGINS "#QYPP" OR nr-pedcli BEGINS "#QYPD" THEN
+            ASSIGN nat-oper  = "5102".            
     END. ELSE IF emitente.cod-emitente = 10005825 THEN DO:
-        IF nr-pedcli = "QEST" THEN
+        IF nr-pedcli BEGINS "QEST" OR nr-pedcli BEGINS "HETZ" THEN
             ASSIGN nat-oper  = "5101CB".
     END. ELSE IF emitente.cod-emitente = 10006602 THEN DO:
         IF nr-pedcli BEGINS "QAPD" THEN
@@ -772,15 +922,46 @@ PROCEDURE pega-natureza-operacao :
     IF emitente.cod-emitente = 10007155 THEN
         ASSIGN nat-oper = "6101".
 END PROCEDURE.
+
+PROCEDURE pega-natureza-operacao-item :
+    DEF INPUT        PARAM cod-estabel AS CHAR NO-UNDO.
+    DEF INPUT        PARAM it-codigo   AS CHAR NO-UNDO.
+    DEF INPUT        PARAM nr-pedcli   AS CHAR NO-UNDO.
+    DEF INPUT-OUTPUT PARAM nat-oper    AS CHAR NO-UNDO.
+
+    
+    FIND FIRST item-fatur-compl NO-LOCK
+        WHERE item-fatur-compl.it-codigo = it-codigo NO-ERROR.
+    IF AVAIL item-fatur-compl AND item-fatur-compl.nat-oper <> '' THEN
+        ASSIGN nat-oper = item-fatur-compl.nat-oper.
+    ELSE
+        RUN pega-natureza-operacao(cod-estabel,
+                                   nr-pedcli,
+                                   INPUT-OUTPUT nat-oper).
+
+    /* a saida abaixo seria mais "elegante"
+    FIND FIRST item-fatur-estab NO-LOCK
+        WHERE item-fatur-estab.cod-estabel = cod-estabel
+          AND item-fatur-estab.it-codigo = it-codigo NO-ERROR.
+    IF AVAIL item-fatur-estab THEN DO:
+        ASSIGN nat-oper = item-fatur-estab.nat-oper.
+    END. ELSE DO:
+        RUN pega-natureza-operacao(cod-estabel,
+                                   nr-pedcli,
+                                   INPUT-OUTPUT nat-oper).
+    END.
+    */
+END PROCEDURE.
 /**
  *  Retorna a proxima hora de entrega (mais 10 segundos da anterior)
  ************************************************************************/
 FUNCTION get-hr-entrega RETURNS CHAR (nr-pedcli AS CHAR, it-codigo AS CHAR, dt-entrega AS DATE, c-hora AS CHAR):
-    IF c-hora = "" THEN 
+    IF c-hora = '' THEN 
         ASSIGN c-hora = "000000".
-    FOR EACH ped-ent WHERE ped-ent.nr-pedcli  = nr-pedcli
-                       AND ped-ent.it-codigo  = it-codigo
-                       AND ped-ent.dt-entrega = dt-entrega NO-LOCK: 
+    FOR EACH ped-ent NO-LOCK
+            WHERE ped-ent.nr-pedcli  = nr-pedcli
+              AND ped-ent.it-codigo  = it-codigo
+              AND ped-ent.dt-entrega = dt-entrega: 
         IF c-hora < ped-ent.hr-entrega THEN
             ASSIGN c-hora = ped-ent.hr-entrega.
     END.
@@ -788,5 +969,4 @@ FUNCTION get-hr-entrega RETURNS CHAR (nr-pedcli AS CHAR, it-codigo AS CHAR, dt-e
 END FUNCTION.
 
 /*FIND FIRST emitente NO-LOCK WHERE emitente.cod-emitente = 10000326 NO-ERROR.*/
-
 

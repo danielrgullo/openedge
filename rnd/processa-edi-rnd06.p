@@ -14,7 +14,7 @@
 /***************/
 
 
-PROCEDURE get-temp-tables:
+/*PROCEDURE get-temp-tables:
     DEF OUTPUT PARAM TABLE FOR tt-edi.
     DEF OUTPUT PARAM TABLE FOR tt-ped-edi.
     DEF OUTPUT PARAM TABLE FOR tt-ped-edi-ent.
@@ -24,7 +24,7 @@ PROCEDURE pi-limpa-temp-tables:
     EMPTY TEMP-TABLE tt-edi.
     EMPTY TEMP-TABLE tt-ped-edi.
     EMPTY TEMP-TABLE tt-ped-edi-ent.
-END.
+END.*/
 
 PROCEDURE pi-processa-EDI:
     
@@ -139,4 +139,3 @@ PROCEDURE pi-processa-EDI:
         END. /* /for each tt-pp1 */
     END. /* /do on stop .. */
 END PROCEDURE.
-

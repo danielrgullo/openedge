@@ -6,9 +6,9 @@
 
 */
 /* temp-table  */
-{c:/work/desenv/edi/tt-ediccs.i}
+{edi/tt-ediccs.i}
 /***************/
-{c:/work/desenv/rnd/rnd12.p}
+{rnd/rnd12.p}
 /***************/
 /*DEFINE NEW GLOBAL SHARED VAR h-acomp-edi AS HANDLE NO-UNDO.*/
 /***************/
@@ -56,6 +56,11 @@ PROCEDURE pi-processa-EDI:
             WHERE ccs-edi-conf.cod-emitente = emitente.cod-emitente NO-ERROR.
         IF NOT AVAIL ccs-edi-conf THEN STOP.
 
+        /*IF ccs-edi-conf.proc-it-codigo <> "" THEN DO:
+            ASSIGN c-programaFormataCodigo = ccs-edi-conf.proc-it-codigo.
+        END.
+        RUN VALUE(c-programaFormataCodigo) PERSISTENT SET h-formata-codigo.
+        */
     
         ASSIGN dt-aux = fi-conv-date(SUBSTR(tt-itp.id-movimento, 1, 6)).
         CREATE tt-edi.
@@ -80,6 +85,12 @@ PROCEDURE pi-processa-EDI:
         FIRST tt-ep1 NO-LOCK
             WHERE tt-ep1.r-rowid = ROWID(tt-pd1):
 
+        /*IF l-acomp THEN DO:
+            RUN pi-acompanhar IN h-acomp-edi (INPUT "Processando pedido : " + tt-pd1.num-ped-compra) NO-ERROR.
+        END.*/
+
+        /*RUN pi-traduz IN h-formata-codigo ( INPUT TRIM(tt-pd1.codigo-refer),
+                                            OUTPUT codigo-refer ).*/
         RUN pi-traduz ( INPUT TRIM(tt-pd1.codigo-refer),
                         OUTPUT codigo-refer ).
 
@@ -98,14 +109,14 @@ PROCEDURE pi-processa-EDI:
             IF NOT AVAIL tt-ped-edi THEN DO:
         
                 CREATE tt-ped-edi.
-                ASSIGN tt-ped-edi.cod-emitente = tt-edi.cod-emitente
-                       tt-ped-edi.id-movimento = tt-edi.id-movimento
-                       tt-ped-edi.id-programa  = tt-ep1.id-programa-atu
-                       tt-ped-edi.dt-programa  = tt-ep1.dt-programa-atu
-                       tt-ped-edi.codigo-refer = codigo-refer
-                       tt-ped-edi.nr-pedcli    = nr-pedcli
-                       tt-ped-edi.tipo-fornec  = tt-pd1.cod-tipo-forn
-                       tt-ped-edi.alt-tec      = tt-pd1.altera-tecnica
+                ASSIGN tt-ped-edi.cod-emitente   = tt-edi.cod-emitente
+                       tt-ped-edi.id-movimento   = tt-edi.id-movimento
+                       tt-ped-edi.id-programa    = tt-ep1.id-programa-atu
+                       tt-ped-edi.dt-programa    = tt-ep1.dt-programa-atu
+                       tt-ped-edi.codigo-refer   = codigo-refer
+                       tt-ped-edi.nr-pedcli      = nr-pedcli
+                       tt-ped-edi.tipo-fornec    = tt-pd1.cod-tipo-forn
+                       tt-ped-edi.alt-tec        = tt-pd1.altera-tecnica
                        tt-ped-edi.dt-ult-entrega = tt-pd1.dt-ult-nf
                        tt-ped-edi.qt-ult-entrega = 0 /* pegar da NF ? */
                        tt-ped-edi.ult-nf         = tt-pd1.num-ult-nf
@@ -135,20 +146,44 @@ PROCEDURE pi-processa-EDI:
             END. /* not avail tt-ped-edi */
 
             DO i-aux = 1 TO EXTENT(tt-pd2.dt-entrega):
+
                 IF tt-pd2.dt-entrega[i-aux] = ? THEN NEXT.
-    
-                CREATE tt-ped-edi-ent.
-                ASSIGN tt-ped-edi-ent.cod-emitente = tt-edi.cod-emitente
-                       tt-ped-edi-ent.id-movimento = tt-edi.id-movimento
-                       tt-ped-edi-ent.id-programa  = tt-ped-edi.id-programa
-                       tt-ped-edi-ent.nr-pedcli    = tt-ped-edi.nr-pedcli
-                       tt-ped-edi-ent.codigo-refer = tt-ped-edi.codigo-refer
-                       tt-ped-edi-ent.alt-tec      = tt-ped-edi.alt-tec
-                       tt-ped-edi-ent.it-codigo    = tt-ped-edi.it-codigo
-                       tt-ped-edi-ent.dt-entrega   = tt-pd2.dt-entrega[i-aux]
-                       tt-ped-edi-ent.qt-entrega   = tt-pd2.qt-entrega[i-aux]
-                       tt-ped-edi-ent.situacao     = 1 /* s√≥ tem firme nesse arquivo? */
-                       .
+
+/*                 CREATE tt-ped-edi-ent.                                                     */
+/*                 ASSIGN tt-ped-edi-ent.cod-emitente = tt-edi.cod-emitente                   */
+/*                        tt-ped-edi-ent.id-movimento = tt-edi.id-movimento                   */
+/*                        tt-ped-edi-ent.id-programa  = tt-ped-edi.id-programa                */
+/*                        tt-ped-edi-ent.nr-pedcli    = tt-ped-edi.nr-pedcli                  */
+/*                        tt-ped-edi-ent.codigo-refer = tt-ped-edi.codigo-refer               */
+/*                        tt-ped-edi-ent.alt-tec      = tt-ped-edi.alt-tec                    */
+/*                        tt-ped-edi-ent.it-codigo    = tt-ped-edi.it-codigo                  */
+/*                        tt-ped-edi-ent.dt-entrega   = tt-pd2.dt-entrega[i-aux]              */
+/*                        tt-ped-edi-ent.qt-entrega   = tt-pd2.qt-entrega[i-aux]              */
+/*                        tt-ped-edi-ent.situacao     = 1. /* s¢ tem firme nesse arquivo? */  */
+
+                FIND FIRST tt-ped-edi-ent
+                     WHERE tt-ped-edi-ent.cod-emitente = tt-edi.cod-emitente
+                       AND tt-ped-edi-ent.nr-pedcli    = tt-ped-edi.nr-pedcli
+                       AND tt-ped-edi-ent.it-codigo    = tt-ped-edi.it-codigo
+                       AND tt-ped-edi-ent.dt-entrega   = tt-pd2.dt-entrega[i-aux] NO-ERROR.
+                IF NOT AVAIL tt-ped-edi-ent THEN DO:
+                   CREATE tt-ped-edi-ent.
+                   ASSIGN tt-ped-edi-ent.cod-emitente = tt-edi.cod-emitente
+                          tt-ped-edi-ent.id-movimento = tt-edi.id-movimento
+                          tt-ped-edi-ent.id-programa  = tt-ped-edi.id-programa
+                          tt-ped-edi-ent.nr-pedcli    = tt-ped-edi.nr-pedcli
+                          tt-ped-edi-ent.codigo-refer = tt-ped-edi.codigo-refer
+                          tt-ped-edi-ent.alt-tec      = tt-ped-edi.alt-tec
+                          tt-ped-edi-ent.it-codigo    = tt-ped-edi.it-codigo
+                          tt-ped-edi-ent.dt-entrega   = tt-pd2.dt-entrega[i-aux]
+                          /* tt-ped-edi-ent.qt-entrega   = tt-pd2.qt-entrega[i-aux] */
+                          tt-ped-edi-ent.situacao     = 1 /* s¢ tem firme nesse arquivo? */
+                          tt-ped-edi-ent.cod-destino  = tt-ep1.cod-fab-destino
+                          .
+                END.
+                IF AVAIL tt-ped-edi-ent THEN
+                   ASSIGN tt-ped-edi-ent.qt-entrega = tt-ped-edi-ent.qt-entrega + tt-pd2.qt-entrega[i-aux].
+
             END.
         END. /* each tt-pd2 ... */
 
@@ -182,4 +217,3 @@ PROCEDURE pi-traduz:
     ELSE
         ASSIGN o-codigo-refer = SUBSTRING(i-codigo-refer, 12, 7).
 END PROCEDURE.
-
