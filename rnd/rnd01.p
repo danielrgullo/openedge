@@ -20,29 +20,19 @@
     pi-grava-te1
 
 **/
+DEFINE NEW GLOBAL SHARED VAR h-acomp-edi AS HANDLE NO-UNDO.
 
 /* temp-table */
 {c:/work/desenv/rnd/tt-rnd01.i}
 /**************/
 {c:/work/desenv/edi/edi-util.p}
 /**************/
-DEFINE NEW GLOBAL SHARED VAR h-acomp-edi AS HANDLE NO-UNDO.
 DEF VAR txt AS CLASS ccs.textoUtil.
 txt = NEW ccs.textoUtil("").
 
 DEF STREAM st.
 
 DEF VAR pedido-no-pe5 AS LOGICAL NO-UNDO INIT NO.
-
-PROCEDURE le-EDI:
-    DEF INPUT PARAM nomeArquivo AS CHAR NO-UNDO.
-
-    RUN pi-le-arquivo(INPUT nomeArquivo).
-    IF RETURN-VALUE = "NOK" THEN 
-        RETURN RETURN-VALUE.
-    ELSE
-        RUN pi-processa-EDI.
-END.
 
 /*************************************************************************************************************/
 
@@ -67,7 +57,8 @@ PROCEDURE pi-le-arquivo:
         RETURN "NOK".
     END.
 
-    DO ON STOP UNDO, LEAVE:
+    DO 
+        ON STOP UNDO, LEAVE :
     
         INPUT STREAM st FROM VALUE(nomeArquivo) NO-ECHO NO-MAP NO-CONVERT.
         looop_arquivo:
@@ -93,11 +84,22 @@ PROCEDURE pi-le-arquivo:
                 END.
                 WHEN  "PE2" THEN DO:
                     IF c-estado <> "PE1" THEN STOP.
+                        
                     c-estado = c-tipoRegistro.
                     RUN pi-grava-pe2(c-linha, pe1-rowid).
                 END.
                 WHEN  "PE3" THEN DO:
-                    IF c-estado <> "PE2" AND c-estado <> "PE3" AND c-estado <> "PE5"  THEN STOP.
+
+                    IF c-estado <> "PE2" AND c-estado <> "PE3" AND c-estado <> "PE5"  THEN 
+                        STOP.
+
+                    /* temporario isso 
+                    IF c-estado <> "PE2" AND c-estado <> "PE3" AND c-estado <> "PE5"  THEN DO:
+                        ASSIGN c-estado = c-tipoRegistro.
+                        NEXT. 
+                    END.
+                    */
+
                     ASSIGN c-estado = c-tipoRegistro
                            i-pe3    = i-pe3 + 1.
                     RUN pi-grava-pe3(c-linha, i-pe3, pe1-rowid).
@@ -134,11 +136,12 @@ PROCEDURE pi-le-arquivo:
         IF l-acomp THEN DO:
             RUN pi-acompanhar IN h-acomp-edi (INPUT  "Arquivo lido.")  NO-ERROR.
         END.
-    
+        
         RETURN "OK".
     END.
 
     INPUT STREAM st CLOSE.
+    
     RETURN "NOK".
 END PROCEDURE.
 
@@ -159,7 +162,7 @@ PROCEDURE pi-grava-itp:
            tt-itp.versao-rnd     = txt:getIntSlice(7, 2)
            tt-itp.num-controle   = txt:getIntSlice(9, 5)
            tt-itp.id-movimento   = txt:getChrSlice(14, 12)
-           tt-itp.id-transmis    = txt:getChrSlice(26, 14)
+           tt-itp.ident-transmis = txt:getChrSlice(26, 14)
            tt-itp.ident-receptor = txt:getChrSlice(40, 14)
            tt-itp.cod-transmis   = txt:getChrSlice(54, 8)
            tt-itp.cod-receptor   = txt:getChrSlice(62, 8)
@@ -168,7 +171,7 @@ PROCEDURE pi-grava-itp:
     /* pensar numa forma de melhorar isso a seguir : */
     ASSIGN pedido-no-pe5 = NO.
     FOR FIRST emitente NO-LOCK
-            WHERE emitente.cgc = tt-itp.id-transmis,
+            WHERE emitente.cgc = tt-itp.ident-transmis,
         FIRST ccs-edi-conf OF emitente NO-LOCK:
         ASSIGN pedido-no-pe5 = (ccs-edi-conf.l-oc-pe5 = YES).
     END.
@@ -202,7 +205,7 @@ PROCEDURE pi-grava-pe2:
     IF NOT AVAIL tt-itp THEN
         FIND FIRST tt-itp NO-LOCK NO-ERROR.
     
-    IF tt-itp.versao-rnd = 60 THEN DO: /* A Volvo utilzia essa versÃ£o. Arq: 001v60-9P.doc */
+    IF tt-itp.versao-rnd = 60 THEN DO: /* A Volvo utilzia essa versÆo. Arq: 001v60-9P.doc */
         RUN pi-grava-pe2-v60(c-linha, pe1-rowid).
     END. ELSE DO:
         RUN pi-grava-pe2-normal(c-linha, pe1-rowid).
@@ -293,8 +296,13 @@ PROCEDURE pi-grava-pe3:
     looop:
     DO i = 1 TO 7:
 
-        IF tt-itp.versao-rnd = 6 THEN DO: /* gambiarra para funcionar corretamente para a maxion */
-            ASSIGN id-programacao = "1".
+        IF tt-itp.versao-rnd = 3 OR tt-itp.versao-rnd = 6 THEN DO: /* gambiarra para funcionar corretamente para a maxion e volvo (3)*/
+        
+            IF AVAIL emitente AND (emitente.cod-emitente = 10003835 OR emitente.cod-emitente = 10002155 OR emitente.cod-emitente = 10009063) THEN 
+                ASSIGN id-programacao = "4".
+            ELSE
+                ASSIGN id-programacao = "1".
+                
             IF txt:getChrSlice(c + 4, 2) = "00" THEN DO:
                 txt:setChrSlice(c + 4, 2, "15").
                 ASSIGN id-programacao = "4".
@@ -313,7 +321,7 @@ PROCEDURE pi-grava-pe3:
     END.
 
     /* gambiarra para funcionar corretamente para a maxion rnd_vers = 06 */
-    IF tt-itp.versao-rnd = 6 THEN DO: 
+    IF tt-itp.versao-rnd = 3 OR tt-itp.versao-rnd = 6 THEN DO: 
         RUN pi-grava-pe5(c-pe5, i-pe3, pe1-rowid).
     END.
 END PROCEDURE.
@@ -344,7 +352,8 @@ PROCEDURE pi-grava-pe5:
                tt-pe5.id-programacao[i]  = txt:getChrSlice(c + 6, 1)
                tt-pe5.id-prg-atual[i]    = txt:getChrSlice(c + 7, 9)
                c = c + 16.
-        IF c > tamanhoLinha THEN LEAVE looop.
+        IF c > tamanhoLinha THEN 
+            LEAVE looop.
     END.
 END PROCEDURE.
 
@@ -369,8 +378,40 @@ PROCEDURE pi-grava-te1:
 
     txt:setText(c-linha).
 
-    CREATE tt-te1.
-    ASSIGN tt-te1.txt-informa = txt:getChrSlice(4, 120)
-           tt-te1.r-rowid = pe1-rowid.
+    FIND FIRST tt-te1
+        WHERE tt-te1.r-rowid = pe1-rowid NO-ERROR.
+    IF NOT AVAIL tt-te1 THEN DO:
+        CREATE tt-te1.
+        ASSIGN tt-te1.txt-informa = TRIM(txt:getChrSlice(4, 120))
+               tt-te1.r-rowid = pe1-rowid.
+    END. ELSE DO:
+        ASSIGN tt-te1.txt-informa = tt-te1.txt-informa + TRIM(txt:getChrSlice(4, 120)).
+    END.
+
 END PROCEDURE.
 
+
+/*
+teste : *
+DEF VAR arquivo AS CHAR NO-UNDO 
+    INIT "\\servcitrix\edi-rec-sawluz\RND-001-08-53796098.EDI".
+
+RUN pi-le-arquivo(arquivo).
+DISP RETURN-VALUE.
+
+FOR EACH tt-te1 NO-LOCK:
+    DISP tt-te1
+        EXCEPT r-ROWID
+        WITH SCROLLABLE.
+END.
+
+PROCEDURE pi-processa-edi :
+    
+    FOR EACH tt-pe5 NO-LOCK:
+        DISP tt-pe5
+            EXCEPT tt-pe5.r-rowid
+            WITH SCROLLABLE.
+    END.
+END PROCEDURE.
+
+* */

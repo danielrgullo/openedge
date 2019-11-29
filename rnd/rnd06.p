@@ -237,4 +237,3 @@ PROCEDURE pi-grava-te1:
     END.
     ASSIGN tt-te1.txt-informa = tt-te1.txt-informa + txt:getChrSlice(4, 120) + ' '.
 END PROCEDURE.
-

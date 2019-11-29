@@ -1,4 +1,4 @@
-DEF {1} TEMP-TABLE tt-ITP /* cabeÃ§alho */
+DEF {1} TEMP-TABLE tt-ITP /* cabe‡alho */
     FIELD id-rnd         AS INTEGER
     FIELD versao-rnd     AS INTEGER
     FIELD num-controle   AS INTEGER
@@ -39,7 +39,7 @@ DEF {1} TEMP-TABLE tt-PP2 /* identificacao do item */
     FIELD percent-desconto  AS DECIMAL   FORMAT "99.99"
     FIELD cod-cond-pagto    AS CHARACTER FORMAT "x(4)"
     FIELD r-ROWID           AS ROWID.
-DEF {1} TEMP-TABLE tt-AE3 /* dados adicionais de comercializaÃ§Ã£o */ 
+DEF {1} TEMP-TABLE tt-AE3 /* dados adicionais de comercializa‡Æo */ 
     FIELD local-faturamento AS INTEGER   FORMAT ">>>>>>>>>>>>>9"
     FIELD local-cobranca    AS INTEGER   FORMAT ">>>>>>>>>>>>>9"
     FIELD local-entrega     AS INTEGER   FORMAT ">>>>>>>>>>>>>9"
@@ -80,11 +80,11 @@ DEF {1} TEMP-TABLE tt-PE2 /* inform. de entregas/embarque */
     FIELD qt-necessa-acu    AS DECIMAL FORMAT ">>>>>>>>>>9.999" LABEL "Qtd Necessidade"
     FIELD qt-lote-minimo	AS DECIMAL FORMAT ">>>>>>>>9.999"   LABEL "Qtd Lote Min."
     FIELD cod-freq-fornec   AS CHAR FORMAT "x(3)"       LABEL "Cod Frequencia"
-    FIELD dt-liberacao	    AS DATE FORMAT "99/99/9999" LABEL "Dt LiberaÃ§Ã£o"
-    FIELD dt-libera-mp	    AS DATE FORMAT "99/99/9999" LABEL "Dt LiberaÃ§Ã£o MP"
+    FIELD dt-liberacao	    AS DATE FORMAT "99/99/9999" LABEL "Dt Libera‡Æo"
+    FIELD dt-libera-mp	    AS DATE FORMAT "99/99/9999" LABEL "Dt Libera‡Æo MP"
     FIELD cod-local-desc	AS CHAR FORMAT "x(7)"       LABEL "Cod Local Destino"
-    FIELD periodo-embarq	AS CHAR FORMAT "x(4)"       LABEL "PerÃ­odo Embarque"
-    FIELD cod-sit-item	    AS CHAR FORMAT "x(2)"       LABEL "Cod SituaÃ§Ã£o Item"
+    FIELD periodo-embarq	AS CHAR FORMAT "x(4)"       LABEL "Per¡odo Embarque"
+    FIELD cod-sit-item	    AS CHAR FORMAT "x(2)"       LABEL "Cod Situa‡Æo Item"
     FIELD id-tipo-prg		AS CHAR FORMAT "x(1)"       LABEL "ID Tipo Programa"
     FIELD pedido-reven	    AS CHAR FORMAT "x(13)"      LABEL "Pedido Revenda"
     FIELD qualific-prg	    AS CHAR FORMAT "x(1)"       LABEL "Qualific. Progr."
@@ -110,7 +110,7 @@ DEF {1} TEMP-TABLE tt-PE5 /*comple cronog entrega/embarque*/
     INDEX id r-ROWID ind
     .
 DEF {1} TEMP-TABLE tt-PE6 /*dados complementares do item*/
-    FIELD fat-conversao	    AS DECIMAL FORMAT ">>>>9.99999"   LABEL "Fator conversÃ£o"
+    FIELD fat-conversao	    AS DECIMAL FORMAT ">>>>9.99999"   LABEL "Fator conversÆo"
     FIELD altera-tecnica	AS CHAR    FORMAT "x(4)"          LABEL "Alt. Tecnica"
     FIELD cod-material	    AS CHAR    FORMAT "x(10)"         LABEL "Codigo Mat."
     FIELD peso-item		    AS DECIMAL FORMAT ">>>>>>>>9.999" LABEL "Peso"
@@ -124,4 +124,3 @@ DEF {1} TEMP-TABLE tt-TE1 /* texto livre */
     FIELD r-ROWID           AS ROWID
     INDEX id r-ROWID
     .
-

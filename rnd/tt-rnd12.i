@@ -1,4 +1,4 @@
-DEF {1} TEMP-TABLE tt-ITP /* cabe√ßalho */
+DEF {1} TEMP-TABLE tt-ITP /* cabeáalho */
     FIELD id-rnd         AS INTEGER
     FIELD versao-rnd     AS INTEGER
     FIELD num-controle   AS INTEGER
@@ -71,4 +71,3 @@ DEF {1} TEMP-TABLE tt-TE1 /* texto livre */
     FIELD r-ROWID           AS ROWID
     INDEX id r-ROWID
     .
-

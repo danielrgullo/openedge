@@ -20,15 +20,16 @@
 **/
 
 /* temp-table */
-{c:/work/desenv/rnd/tt-rnd12.i}
+{rnd/tt-rnd12.i}
 /**************/
-{c:/work/desenv/edi/edi-util.p}
+{edi/edi-util.p}
 /**************/
-DEFINE NEW GLOBAL SHARED VAR h-acomp-edi AS HANDLE NO-UNDO.
 
 DEF VAR txt AS CLASS ccs.textoUtil.
 txt = NEW ccs.textoUtil("").
 DEF STREAM st.
+
+DEFINE NEW GLOBAL SHARED VAR h-acomp-edi AS HANDLE NO-UNDO.
 
 PROCEDURE le-EDI:
     DEF INPUT PARAM nomeArquivo AS CHAR NO-UNDO.
@@ -259,3 +260,64 @@ PROCEDURE pi-grava-te1:
     ASSIGN tt-te1.txt-informa = txt:getChrSlice(4, 120)
            tt-te1.r-rowid = r-rowid.
 END PROCEDURE.
+
+/* 
+ * TESTE :
+ ***********
+
+FORM tt-pd2.dt-entrega[1] AT ROW 1 COL 1 tt-pd2.qt-entrega[1] AT ROW 1 COL 30
+     tt-pd2.dt-entrega[2] AT ROW 2 COL 1 tt-pd2.qt-entrega[2] AT ROW 2 COL 30
+     tt-pd2.dt-entrega[3] AT ROW 3 COL 1 tt-pd2.qt-entrega[3] AT ROW 3 COL 30
+     tt-pd2.dt-entrega[4] AT ROW 4 COL 1 tt-pd2.qt-entrega[4] AT ROW 4 COL 30
+     tt-pd2.dt-entrega[5] AT ROW 5 COL 1 tt-pd2.qt-entrega[5] AT ROW 5 COL 30
+     tt-pd2.dt-entrega[6] AT ROW 6 COL 1 tt-pd2.qt-entrega[6] AT ROW 6 COL 30
+    WITH FRAME PD2 NO-LABEL STREAM-IO.
+
+RUN pi-le-arquivo ("C:\temp\edi\150506084713037_2150506084712033174-15132200645-JACT-JACTOCENTRO-CCST-CCSLIMEIRA-RND-01206-01.MDI").
+
+FOR EACH tt-pd1 NO-LOCK:
+
+    DISP tt-PD1.codigo-refer
+         tt-PD1.altera-tecnica
+         tt-PD1.num-ult-nf        
+         tt-PD1.serie-ult-nf      
+         tt-PD1.dt-ult-nf         
+         tt-PD1.qt-entrega-acum   
+         tt-PD1.dt-entrega-acum   
+         tt-PD1.unid-medida       
+         tt-PD1.cod-tipo-forn     
+        WITH 1 COL FRAME PD1 .
+
+    FOR EACH tt-ep1 NO-LOCK
+            WHERE tt-ep1.r-rowid = ROWID(tt-pd1):
+
+        DISP tt-ep1.cod-fab-destino   
+             tt-ep1.id-programa-atu   
+             tt-ep1.dt-programa-atu   
+             /*tt-ep1.id-programa-ant   
+             tt-ep1.dt-programa-ant   
+             tt-ep1.qt-nesses-acum    
+             tt-ep1.cod-freq-forn     
+             tt-ep1.nr-ped-compra     
+             tt-ep1.cod-loc-material  */
+            WITH 1 COL FRAME EP1 .
+
+    END.
+
+    FOR EACH tt-pd2 NO-LOCK
+            WHERE tt-pd2.r-rowid = ROWID(tt-pd1):
+
+        FOR EACH tt-pd3 NO-LOCK
+                WHERE tt-pd3.r-rowid = ROWID(tt-pd2):
+            DISP tt-pd3.pedido-cliente
+                WITH 1 COL FRAME PD3 .
+        END.
+
+        DISP tt-pd2.dt-entrega
+             tt-pd2.qt-entrega
+             SKIP(1)
+            WITH FRAME PD2 SCROLLABLE STREAM-IO.
+    END.
+    
+END.
+*/

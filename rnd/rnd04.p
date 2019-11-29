@@ -106,6 +106,7 @@ PROCEDURE geraEDI22:
 
     ccs = "Q9994G0 ".
     IF cli = 10002155 THEN ccs = "00034857".
+    IF cli = 10009063 THEN ccs = "00008499".
     IF cli = 10006602 THEN ccs = "Q9994G6 ".
 
     IF cli = 10000124 OR cli = 10005825 OR cli = 10006602 THEN
@@ -263,7 +264,7 @@ PROCEDURE geraEDI22:
     
         nlinhas = nlinhas + 1.
     
-        IF cli <> 10002155 THEN DO:
+        IF cli <> 10002155 AND cli <> 10009063 THEN DO:
             /*
                NF3
             */                  
@@ -403,7 +404,7 @@ PROCEDURE geraEDI22:
                      " "
                      SKIP.
             nlinhas = nlinhas + 1.
-            IF cli <> 10002155 THEN DO:
+            IF cli <> 10002155 AND cli <> 10009063 THEN DO:
                 /*
                     AE6
                 */
@@ -416,7 +417,7 @@ PROCEDURE geraEDI22:
                 nlinhas = nlinhas + 1.
             END.
 
-            IF cli <> 10002155 THEN DO:
+            IF cli <> 10002155 AND cli <> 10009063 THEN DO:
                 /*
                    AE7
                 */
@@ -432,7 +433,7 @@ PROCEDURE geraEDI22:
                           SKIP.
                 nlinhas = nlinhas + 1.
             END.
-            /*IF cli <> 10002155 THEN DO:
+            /*IF cli <> 10002155 AND cli <> 10009063 THEN DO:
                 IF tt-it-nota-fisc.ind-tip-nota = 3 OR tt-it-nota-fisc.ind-tip-nota = 4 THEN DO:
                        
                     FIND FIRST doc-fiscal NO-LOCK WHERE doc-fiscal.cod-estabel  = nota-fiscal.cod-estabel
@@ -465,7 +466,7 @@ PROCEDURE geraEDI22:
                         nlinhas = nlinhas + 1.
                     END.
                 END.
-            END. temporariamente off */ /* cli <> 10002155 */
+            END. temporariamente off */ /* cli <> 10002155 ... */
         END.
     END. /* nota-fiscal */        
     nlinhas = nlinhas + 1.
@@ -549,6 +550,7 @@ PROCEDURE geraEDI18:
 
     ccs = "Q9994G0 ".
     IF cli = 10002155 THEN ccs = "00034857".
+    IF cli = 10009063 THEN ccs = "00008499".
     IF cli = 10006602 THEN ccs = "Q9994G6 ".
 
     IF cli = 10000124 OR cli = 10005825 OR cli = 10006602 THEN
@@ -857,7 +859,7 @@ PROCEDURE geraEDI18:
 
         /*IF nota-fiscal.ind-tip-nota = 3 OR nota-fiscal.ind-tip-nota = 4 THEN DO:
 
-            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente √†s NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
+            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente Ös NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
             IF LENGTH(c-te1) > 120 THEN
                 c-te1 = SUBSTR(c-te1, 1, 120).
             /*
@@ -962,6 +964,7 @@ PROCEDURE geraEDI17:
 
     ccs = "Q9994G0 ".
     IF cli = 10002155 THEN ccs = "00034857".
+    IF cli = 10009063 THEN ccs = "00008499".
     IF cli = 10006602 THEN ccs = "Q9994G6 ".
 
     IF cli = 10000124 OR cli = 10005825 OR cli = 10006602 THEN
@@ -1278,7 +1281,7 @@ PROCEDURE geraEDI17:
 
         /*IF nota-fiscal.ind-tip-nota = 3 OR nota-fiscal.ind-tip-nota = 4 THEN DO:
 
-            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente √†s NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
+            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente Ös NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
             IF LENGTH(c-te1) > 120 THEN
                 c-te1 = SUBSTR(c-te1, 1, 120).
             /*
@@ -1375,6 +1378,7 @@ PROCEDURE geraEDI15:
 
     ccs = "Q9994G0 ".
     IF cli = 10002155 THEN ccs = "00034857".
+    IF cli = 10009063 THEN ccs = "00008499".
     IF cli = 10006602 THEN ccs = "Q9994G6 ".
                                           
 
@@ -1454,7 +1458,7 @@ PROCEDURE geraEDI15:
         IF NOT AVAIL fat-duplic THEN
             dtvenc = "000000".
         ELSE DO:
-            IF nota-fiscal.cod-emitente = 10002155 THEN
+            IF nota-fiscal.cod-emitente = 10002155 OR nota-fiscal.cod-emitente = 10009063 THEN
                 dtvenc = SUBSTRING(STRING(YEAR(fat-duplic.dt-venciment)),3,2) + STRING(MONTH(fat-duplic.dt-venciment),"99") +  STRING(DAY(fat-duplic.dt-venciment),"99").
             ELSE
                 dtvenc = STRING(DAY(fat-duplic.dt-venciment),"99") + STRING(MONTH(fat-duplic.dt-venciment),"99") + SUBSTRING(STRING(YEAR(fat-duplic.dt-venciment)),3,2) .
@@ -1562,7 +1566,7 @@ PROCEDURE geraEDI15:
             END. ELSE DO:
                 it-cliente = TRIM(REPLACE(REPLACE( ENTRY(1, ITEM.codigo-refer, "#") ,"-","")," ","")) NO-ERROR.
                 it-cliente = REPLACE( it-cliente ,".","").
-                IF cli <> 10002155 THEN
+                IF cli <> 10002155 AND cli <> 10009063 THEN
                     rev   = ENTRY(2, ITEM.codigo-refer, "#" ) NO-ERROR.
             END.
 
@@ -1696,7 +1700,7 @@ PROCEDURE geraEDI15:
 
         /*IF nota-fiscal.ind-tip-nota = 3 OR nota-fiscal.ind-tip-nota = 4 THEN DO:
 
-            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente √†s NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
+            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente Ös NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
             IF LENGTH(c-te1) > 120 THEN
                 c-te1 = SUBSTR(c-te1, 1, 120).
             /*
@@ -1794,6 +1798,7 @@ PROCEDURE geraEDI06:
 
     ccs = "Q9994G0 ".
     IF cli = 10002155 THEN ccs = "00034857".
+    IF cli = 10009063 THEN ccs = "00008499".
     IF cli = 10006602 THEN ccs = "Q9994G6 ".
                                           
 
@@ -1873,7 +1878,7 @@ PROCEDURE geraEDI06:
         IF NOT AVAIL fat-duplic THEN
             dtvenc = "000000".
         ELSE DO:
-            IF nota-fiscal.cod-emitente = 10002155 THEN
+            IF nota-fiscal.cod-emitente = 10002155 OR nota-fiscal.cod-emitente = 10009063 THEN
                 dtvenc = SUBSTRING(STRING(YEAR(fat-duplic.dt-venciment)),3,2) + STRING(MONTH(fat-duplic.dt-venciment),"99") +  STRING(DAY(fat-duplic.dt-venciment),"99").
             ELSE
                 dtvenc = STRING(DAY(fat-duplic.dt-venciment),"99") + STRING(MONTH(fat-duplic.dt-venciment),"99") + SUBSTRING(STRING(YEAR(fat-duplic.dt-venciment)),3,2) .
@@ -1954,7 +1959,7 @@ PROCEDURE geraEDI06:
             END. ELSE DO:
                 it-cliente = TRIM(REPLACE(REPLACE( ENTRY(1, ITEM.codigo-refer, "#") ,"-","")," ","")) NO-ERROR.
                 it-cliente = REPLACE( it-cliente ,".","").
-                IF cli <> 10002155 THEN
+                IF cli <> 10002155 AND cli <> 10009063 THEN
                     rev   = ENTRY(2, ITEM.codigo-refer, "#" ) NO-ERROR.
             END.
 
@@ -2109,6 +2114,7 @@ PROCEDURE geraEDI04:
 
     ccs = "Q9994G0 ".
     IF cli = 10002155 THEN ccs = "00034857".
+    IF cli = 10009063 THEN ccs = "00008499".
     IF cli = 10006602 THEN ccs = "Q9994G6 ".
                                           
     FIND FIRST emitente NO-LOCK WHERE emitente.cod-emitente = cli NO-ERROR.
@@ -2187,7 +2193,7 @@ PROCEDURE geraEDI04:
         IF NOT AVAIL fat-duplic THEN
             dtvenc = "000000".
         ELSE DO:
-            IF nota-fiscal.cod-emitente = 10002155 THEN
+            IF nota-fiscal.cod-emitente = 10002155 OR nota-fiscal.cod-emitente = 10009063 THEN
                 dtvenc = SUBSTRING(STRING(YEAR(fat-duplic.dt-venciment)),3,2) + STRING(MONTH(fat-duplic.dt-venciment),"99") +  STRING(DAY(fat-duplic.dt-venciment),"99").
             ELSE
                 dtvenc = STRING(DAY(fat-duplic.dt-venciment),"99") + STRING(MONTH(fat-duplic.dt-venciment),"99") + SUBSTRING(STRING(YEAR(fat-duplic.dt-venciment)),3,2) .
@@ -2237,7 +2243,7 @@ PROCEDURE geraEDI04:
     
         nlinhas = nlinhas + 1.
     
-        /* n√£o tem no manual da cummins
+        /* n∆o tem no manual da cummins
         /*
            NF2
         */
@@ -2251,7 +2257,7 @@ PROCEDURE geraEDI04:
         nlinhas = nlinhas + 1.
         */
     
-        /* n√£o tem no manual da cummins
+        /* n∆o tem no manual da cummins
         /*
            NF3
         */
@@ -2281,7 +2287,7 @@ PROCEDURE geraEDI04:
 
             cont = cont + 1.
 
-            /* TODO: colocar como fun√ßao ??
+            /* TODO: colocar como funáao ??
             CREATE edi_Cat.
             ASSIGN edicat_part    = it-nota-fisc.it-codigo
                    edicat_nf      = nota-fiscal.nr-nota-fis
@@ -2298,7 +2304,7 @@ PROCEDURE geraEDI04:
             END. ELSE DO:
                 it-cliente = TRIM(REPLACE(REPLACE( ENTRY(1, ITEM.codigo-refer, "#") ,"-","")," ","")) NO-ERROR.
                 it-cliente = REPLACE( it-cliente ,".","").
-                IF cli <> 10002155 THEN
+                IF cli <> 10002155 AND cli <> 10009063 THEN
                     rev   = ENTRY(2, ITEM.codigo-refer, "#" ) NO-ERROR.
             END.
 
@@ -2372,7 +2378,7 @@ PROCEDURE geraEDI04:
     
             nlinhas = nlinhas + 1.
             
-            /* n√£o tem no manual da cummins
+            /* n∆o tem no manual da cummins
             FIND FIRST natur-oper OF it-nota-fisc NO-LOCK NO-ERROR.
             /*
                AE7
@@ -2393,7 +2399,7 @@ PROCEDURE geraEDI04:
 
         IF nota-fiscal.ind-tip-nota = 3 OR nota-fiscal.ind-tip-nota = 4 THEN DO:
 
-            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente √†s NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
+            c-te1 = fn-free-accent(natur-oper.denominacao) + " Referente Ös NFS: " + REPLACE(fi-achaNF(nota-fiscal.observ-nota), " ", ",").
             IF LENGTH(c-te1) > 120 THEN
                 c-te1 = SUBSTR(c-te1, 1, 120).
             /*
@@ -2713,4 +2719,3 @@ FUNCTION espaco RETURNS CHAR (n AS INTEGER):
     END.
     RETURN ret.
 END FUNCTION.
-

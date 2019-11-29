@@ -195,6 +195,7 @@ FUNCTION getCodCCS RETURNS CHAR (cod-emitente AS INTEGER):
     CASE cod-emitente:
         WHEN 10006602 THEN cod-ccs = "Q9994G6 ".
         WHEN 10002155 THEN cod-ccs = "00034857".
+        WHEN 10009063 THEN cod-ccs = "00008499".
     END CASE.
     RETURN cod-ccs.
 END FUNCTION.
@@ -276,4 +277,3 @@ FUNCTION clienteUsaSintel RETURNS LOGICAL ():
             tt-cn16.cod-emitente = 10005705 OR 
             tt-cn16.cod-emitente = 10005725).
 END.
-
